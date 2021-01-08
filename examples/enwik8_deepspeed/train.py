@@ -1945,7 +1945,7 @@ LEARNING_RATE = 1e-4
 SAVE_EVERY  = 100
 GENERATE_EVERY  = 500
 GENERATE_LENGTH = 512
-SEQ_LENGTH = 2750
+SEQ_LENGTH = 2650
 save_model = True
 load_model = False
 
@@ -1965,7 +1965,7 @@ def load_checkpoint_transformer(checkpoint, model, optimizer):
 model = ReformerLM(
     dim = 1024,
     depth = 6,
-    max_seq_len = 2750,
+    max_seq_len = 2650,
     num_tokens = vq.l_bins,
     heads = 8,
     bucket_size = 64,
