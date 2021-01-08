@@ -2024,7 +2024,7 @@ for epoch in range(NUM_BATCHES):
 
         start = 0
 
-        for ii in range(5):
+        for ii in range(10):
           x = x_data[:,start:start+SEQ_LENGTH] 
           data = x
           # y = x_data[:,start+1:start+1+SEQ_LENGTH]
