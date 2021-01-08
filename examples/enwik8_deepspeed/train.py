@@ -2031,13 +2031,15 @@ for epoch in range(NUM_BATCHES):
 
           data = data.to(model_engine.local_rank)
           loss = model_engine(data, return_loss = True)
+          loss_total += loss.item()
+        
           model_engine.backward(loss)
           model_engine.step()
           
           # print(loss.item() * GRADIENT_ACCUMULATE_EVERY)
           # loss = model(x, return_loss = True)
           # loss.backward()
-          # loss_total += loss.item()
+          
 
           start += 1
           
