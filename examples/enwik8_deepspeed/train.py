@@ -183,7 +183,7 @@ class AudioDataset(Dataset):
     return index, offset
 
   def init_dataset(self):
-    files = librosa.util.find_files('./drive/My Drive/VQVAE-trans/dataset/', ['mp3', 'm4a', 'opus','wav'])
+    files = librosa.util.find_files('./drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
     print(f'Found {len(files)} files!')
     self.files = files 
     self.durations = [int(get_duration_sec(file)) for file in files]
