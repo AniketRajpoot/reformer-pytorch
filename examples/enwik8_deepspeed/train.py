@@ -183,7 +183,7 @@ class AudioDataset(Dataset):
     return index, offset
 
   def init_dataset(self):
-    files = librosa.util.find_files('./drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
+    files = librosa.util.find_files('/content/reformer-pytorch/examples/enwik8_deepspeed/drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
     print(f'Found {len(files)} files!')
     self.files = files 
     self.durations = [int(get_duration_sec(file)) for file in files]
@@ -296,7 +296,7 @@ def load_object(filename):
 
 # save_object(dataset, '/content/drive/My Drive/VQVAE-trans/dataset/loader4.pkl')
 
-dataset_reload = load_object('./drive/My Drive/VQVAE-trans/dataset/loader4.pkl')
+dataset_reload = load_object('/content/reformer-pytorch/examples/enwik8_deepspeed/drive/My Drive/VQVAE-trans/dataset/loader4.pkl')
 
 print("Length of dataset is ", len(dataset_reload))
 
