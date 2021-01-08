@@ -184,8 +184,9 @@ class AudioDataset(Dataset):
 
   def init_dataset(self):
     files = librosa.util.find_files('./drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
+    files = files[:30] 
     print(f'Found {len(files)} files!')
-    self.files = files[:30] 
+    self.files = files
     self.durations = [int(get_duration_sec(file)) for file in files]
     self.cumsum = np.cumsum(self.durations)
 
