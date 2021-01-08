@@ -292,7 +292,7 @@ def load_object(filename):
     
     return dataset_reload
 
-dataset_reload = AudioDataset()
+dataset = AudioDataset()
 
 save_object(dataset, './drive/My Drive/VQVAE-trans/dataset/loader_immortal.pkl')
 
