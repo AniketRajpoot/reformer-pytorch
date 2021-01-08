@@ -157,7 +157,7 @@ class AudioDataset(Dataset):
     self.channels = 2
     self.min_duration = 17.0
     self.max_duration = 30.0
-    self.sample_length = 24.0
+    self.sample_length = 1.0
     self.aug_shift = False
     self.init_dataset()
 
