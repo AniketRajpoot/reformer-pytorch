@@ -185,7 +185,7 @@ class AudioDataset(Dataset):
   def init_dataset(self):
     files = librosa.util.find_files('./drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
     print(f'Found {len(files)} files!')
-    self.files = files 
+    self.files = files[:30] 
     self.durations = [int(get_duration_sec(file)) for file in files]
     self.cumsum = np.cumsum(self.durations)
 
@@ -1440,7 +1440,7 @@ vq = Hyperparams(
     dilation_cycle=None,
     vqvae_reverse_decoder_dilation=True,
     sample_length = 24.0*44100,
-    restore_vqvae='',
+    restore_vqvae='/content/drive/My Drive/VQVAE-trans/vqvae-checkpoint-2/checkpoint_step_1.pth.tar',
     lr=0.0003,
     clip=1.0,
     beta1=0.9,
@@ -1563,7 +1563,7 @@ def make_vqvae(hps, device='cuda',train = True):
 
 """## **Make VQ-VAE**"""
 
-vqvae = make_vqvae(vq, device = t.device("cuda"),train=True)
+vqvae = make_vqvae(vq, device = t.device("cuda"),train=False)
 
 vqvae.z_shapes
 
@@ -1964,7 +1964,7 @@ def load_checkpoint_transformer(checkpoint, model, optimizer):
 model = ReformerLM(
     dim = 1024,
     depth = 6,
-    max_seq_len = 2650,
+    max_seq_len = 2750,
     num_tokens = vq.l_bins,
     heads = 8,
     bucket_size = 64,
@@ -1999,7 +1999,7 @@ for epoch in range(NUM_BATCHES):
     
     # print(f'epoch : {epoch}')
 
-    for i in tqdm(range(NUM_ITERATIONS)):
+    for i in tqdm(train_loader):
         song = next(iter(train_loader))
         song = song.to('cuda', non_blocking=True)
         x_in = song = audio_preprocess(song, vq)
@@ -2023,7 +2023,7 @@ for epoch in range(NUM_BATCHES):
 
         start = 0
 
-        for ii in range(100):
+        for ii in range(5):
           x = x_data[:,start:start+SEQ_LENGTH] 
           data = x
           # y = x_data[:,start+1:start+1+SEQ_LENGTH]
@@ -2033,12 +2033,9 @@ for epoch in range(NUM_BATCHES):
           model_engine.backward(loss)
           model_engine.step()
           
-          print(loss.item() * GRADIENT_ACCUMULATE_EVERY)
-
-          
+          # print(loss.item() * GRADIENT_ACCUMULATE_EVERY)
           # loss = model(x, return_loss = True)
           # loss.backward()
-
           # loss_total += loss.item()
 
           start += 1
@@ -2050,10 +2047,10 @@ for epoch in range(NUM_BATCHES):
           count += 1
 
 
-        if(i % 10 == 0): 
+        if(i % 50 == 0): 
           print(f'training loss: {loss_total/(count)} :: epoch : {epoch}')
 
-        if(i % 50 == 0):
+        if(i % 100 == 0):
           if save_model:
             checkpoint = {
               "state_dict": model.state_dict(),
