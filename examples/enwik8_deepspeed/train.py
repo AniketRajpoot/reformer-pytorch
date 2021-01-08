@@ -183,7 +183,7 @@ class AudioDataset(Dataset):
     return index, offset
 
   def init_dataset(self):
-    files = librosa.util.find_files('/drive/My Drive/VQVAE-trans/dataset/', ['mp3', 'm4a', 'opus','wav'])
+    files = librosa.util.find_files('./drive/My Drive/VQVAE-trans/dataset/', ['mp3', 'm4a', 'opus','wav'])
     print(f'Found {len(files)} files!')
     self.files = files 
     self.durations = [int(get_duration_sec(file)) for file in files]
@@ -296,7 +296,7 @@ def load_object(filename):
 
 # save_object(dataset, '/content/drive/My Drive/VQVAE-trans/dataset/loader4.pkl')
 
-dataset_reload = load_object('/drive/My Drive/VQVAE-trans/dataset/loader4.pkl')
+dataset_reload = load_object('./drive/My Drive/VQVAE-trans/dataset/loader4.pkl')
 
 print("Length of dataset is ", len(dataset_reload))
 
@@ -1721,7 +1721,7 @@ import torch.optim as optim
 #    print("Unable to write to file")
 
 try: 
-    filename = '/content/drive/My Drive/EMOTION/VQVAE-trans/Pytorch_dataset/bandwidth2.pkl'
+    filename = './drive/My Drive/EMOTION/VQVAE-trans/Pytorch_dataset/bandwidth2.pkl'
     filehandler = open(filename, 'rb')
     bandwidth_dict = pickle.load(filehandler) 
     print(bandwidth_dict)
@@ -1950,7 +1950,7 @@ load_model = False
 
 def save_checkpoint(state,epoch):
     print("=> Saving checkpoint")
-    prefix = '/drive/MyDrive/audio_VAE/Reformer_checkpoint'
+    prefix = './drive/MyDrive/audio_VAE/Reformer_checkpoint'
     filename = f'{prefix}/checkpoint_{epoch}.pth.tar'
     t.save(state, filename)
 
@@ -1983,7 +1983,7 @@ model.cuda()
 optim = t.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 if load_model:
-    load_checkpoint_transformer(t.load("/drive/MyDrive/audio_VAE/Reformer_checkpoint/checkpoint_700.pth.tar"), model, optim)
+    load_checkpoint_transformer(t.load("./drive/MyDrive/audio_VAE/Reformer_checkpoint/checkpoint_700.pth.tar"), model, optim)
 
 #setup deepspeed
 
