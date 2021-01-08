@@ -1937,14 +1937,14 @@ def add_argument():
     return args
 
 NUM_BATCHES = int(1e5)
-NUM_ITERATIONS = 5000
+NUM_ITERATIONS = 4205
 BATCH_SIZE = 1
 GRADIENT_ACCUMULATE_EVERY = 4
 LEARNING_RATE = 1e-4
 SAVE_EVERY  = 100
 GENERATE_EVERY  = 500
 GENERATE_LENGTH = 512
-SEQ_LENGTH = 2650
+SEQ_LENGTH = 2750
 save_model = True
 load_model = False
 
@@ -1999,7 +1999,7 @@ for epoch in range(NUM_BATCHES):
     
     # print(f'epoch : {epoch}')
 
-    for i in tqdm(train_loader):
+    for i in tqdm(range(NUM_ITERATIONS)):
         song = next(iter(train_loader))
         song = song.to('cuda', non_blocking=True)
         x_in = song = audio_preprocess(song, vq)
