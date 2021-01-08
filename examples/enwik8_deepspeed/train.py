@@ -1417,7 +1417,7 @@ def setup_hparams(hparam_set_names, kwargs):
 vq = Hyperparams(
     sr = 44100,
     levels = 1,
-    downs_t = (5, 5),
+    downs_t = (4, 4),
     strides_t = (2, 2),
     emb_width = 64,
     l_bins = 1024,
