@@ -183,7 +183,7 @@ class AudioDataset(Dataset):
     return index, offset
 
   def init_dataset(self):
-    files = librosa.util.find_files('/content/reformer-pytorch/examples/enwik8_deepspeed/drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
+    files = librosa.util.find_files('./drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
     print(f'Found {len(files)} files!')
     self.files = files 
     self.durations = [int(get_duration_sec(file)) for file in files]
@@ -292,11 +292,11 @@ def load_object(filename):
     
     return dataset_reload
 
-# dataset_reload = AudioDataset()
+dataset_reload = AudioDataset()
 
-# save_object(dataset, '/content/drive/My Drive/VQVAE-trans/dataset/loader4.pkl')
+save_object(dataset, './drive/My Drive/VQVAE-trans/dataset/loader_immortal.pkl')
 
-dataset_reload = load_object('/content/reformer-pytorch/examples/enwik8_deepspeed/drive/My Drive/VQVAE-trans/dataset/loader4.pkl')
+dataset_reload = load_object('./drive/My Drive/VQVAE-trans/dataset/loader_immortal.pkl')
 
 print("Length of dataset is ", len(dataset_reload))
 
@@ -1491,7 +1491,7 @@ def load_checkpoint(path):
 
 def save_checkpoint(i,name, model, opt, metrics, hps):
     with t.no_grad():
-        prefix = '/content/drive/My Drive/VQVAE-trans/vqvae-checkpoint-3/'
+        prefix = './drive/My Drive/VQVAE-trans/vqvae-checkpoint-3/'
         # name = time.strftime(prefix + '%m%d_%H_%M_%S.pth.tr')
         save_hps = {**hps}
         save_hps = {k: v for k,v in save_hps.items() if k not in ['metadata_v2','metadata_v3', 'alignments', 'lyric_processor', 'midi_processor']}
