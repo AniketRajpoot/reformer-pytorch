@@ -1984,7 +1984,7 @@ model.cuda()
 optim = t.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 if load_model:
-    load_checkpoint_transformer(t.load("./drive/MyDrive/audio_VAE/Reformer_checkpoint/checkpoint_5100.pth.tar"), model, optim)
+    load_checkpoint_transformer(t.load("./drive/MyDrive/audio_VAE/Reformer_checkpoint/checkpoint_1500.pth.tar"), model, optim)
 
 #setup deepspeed
 
@@ -2053,7 +2053,7 @@ for epoch in range(NUM_BATCHES):
         if(i % 50 == 0): 
           print(f'training loss: {loss_total/(count)} :: epoch : {epoch}')
 
-        if(i % 100 == 0):
+        if(i % 1000 == 0):
           if save_model:
             checkpoint = {
               "state_dict": model.state_dict(),
