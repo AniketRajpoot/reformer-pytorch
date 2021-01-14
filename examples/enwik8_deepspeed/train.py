@@ -1917,6 +1917,9 @@ def add_argument():
     args=parser.parse_args()
     return args
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
 NUM_BATCHES = int(1e5)
 NUM_ITERATIONS = len(dataset_reload)
 NUM_VAL_ITERATIONS = len(dataset_val)
@@ -1946,7 +1949,7 @@ def load_checkpoint_transformer(checkpoint, model, optimizer):
 # instantiate model
 model = ReformerLM(
     dim = 1024,
-    depth = 6,
+    depth = 18,
     max_seq_len = SEQ_LENGTH,
     num_tokens = vq.l_bins,
     heads = 8,
@@ -1959,6 +1962,8 @@ model = ReformerLM(
     n_local_attn_heads = 4,
     use_full_attn = False # set this to true for comparison with full attention
 )
+
+print(f'model parameters : \n',count_parameters(model))
 
 model = TrainingWrapper(model)
 model.cuda()
@@ -1975,10 +1980,14 @@ model_engine, optimizer, trainloader, _ = deepspeed.initialize(args=cmd_args, mo
 
 # training
 
+print(f'Training Now ------>\n')
+
 for epoch in range(NUM_BATCHES):
     model_engine.train()
     loss_total = 0
+    loss_total_val = 0
     count = 0
+    count_val = 0
     
     # print(f'epoch : {epoch}')
 
