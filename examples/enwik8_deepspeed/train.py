@@ -180,7 +180,7 @@ class AudioDataset(Dataset):
     return index, offset
 
   def init_dataset(self):
-    files = librosa.util.find_files('/content/drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
+    files = librosa.util.find_files('./drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
     print(f'Found {len(files)} files!')
     files = files[:30]
     self.files = files 
@@ -256,7 +256,7 @@ class Audio_Valid_Dataset(Dataset):
     return index, offset
 
   def init_dataset(self):
-    files = librosa.util.find_files('/content/drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
+    files = librosa.util.find_files('./drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
     print(f'Found {len(files)} files!')
     files = files[31:33]
     self.files = files 
@@ -1421,7 +1421,7 @@ vq = Hyperparams(
     dilation_cycle=None,
     vqvae_reverse_decoder_dilation=True,
     sample_length = 12.0*11000,
-    restore_vqvae='/content/drive/MyDrive/VQVAE-trans/vqvae-checkpoint-4/checkpoint_step_8001.pth.tar',
+    restore_vqvae='./drive/MyDrive/VQVAE-trans/vqvae-checkpoint-4/checkpoint_step_8001.pth.tar',
     lr=0.0003,
     clip=1.0,
     beta1=0.9,
