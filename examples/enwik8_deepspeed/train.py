@@ -14,7 +14,6 @@ import numpy       as np
 import tensorflow as tf
 # import blocksparse as bs
 from mpi4py import MPI
-
 import fnmatch
 import os
 import random
@@ -42,7 +41,6 @@ from time import sleep
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-
 import math
 import pickle
 import numpy as np
@@ -60,7 +58,6 @@ import threading
 import librosa,librosa.display
 from six.moves import xrange
 import torch.optim as optim
-# from torch.utils.tensorboard import SummaryWriter
 from argparse import ArgumentParser
 import tqdm,gzip
 import tqdm
@@ -153,11 +150,11 @@ def load_audio(file, sr, offset, duration, resample=True, approx=False, time_bas
 class AudioDataset(Dataset):
   def  __init__(self):
     #data loading
-    self.sr = 44100
+    self.sr = 11000
     self.channels = 2
     self.min_duration = 17.0
     self.max_duration = 30.0
-    self.sample_length = 1.0
+    self.sample_length = 12.0
     self.aug_shift = False
     self.init_dataset()
 
@@ -178,15 +175,15 @@ class AudioDataset(Dataset):
         offset = min(end - self.sample_length, offset + half_interval)  # Now should fit
     #assert start <= offset <= end - self.sample_length, f"Offset {offset} not in [{start}, {end - self.sample_length}]. End: {end}, SL: {self.sample_length}, Index: {index}"
     if not(start <= offset and offset <= end - self.sample_length):
-      offset = offset-1
+      offset = end - self.sample_length
     offset = offset - start
     return index, offset
 
   def init_dataset(self):
-    files = librosa.util.find_files('./drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
-    files = files[:30] 
+    files = librosa.util.find_files('/content/drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
     print(f'Found {len(files)} files!')
-    self.files = files
+    files = files[:30]
+    self.files = files 
     self.durations = [int(get_duration_sec(file)) for file in files]
     self.cumsum = np.cumsum(self.durations)
 
@@ -202,79 +199,6 @@ class AudioDataset(Dataset):
 
 from tqdm import tqdm
 
-def get_batch(file, loader):
-  y1, sr = loader(file, sr=2200, offset=0.0, duration=32.0, time_base='sec')
-  #y2, sr = loader(file, sr=44100, offset=20.0, duration=6.0, time_base='sec')
-  
-  # Some plotting for test purposes  
-  # librosa.display.waveplot(y1,sr)
-  # plt.xlabel('Time')
-  # plt.ylabel('Amplitude')
-  # plt.show()
-
-  #Imp Note the first dimension of signal denotes channels if present
-  # print(y1.shape)
-  return y1
-
-def load(file, loader):
-  batch = get_batch(file, loader)  # np
-  x = collate_fn(batch)  # torch cpu
-  x = x.to('cuda', non_blocking=True)  # torch gpu
-  return x
-
-
-#using librosa to directly load audio file might consider in future!
-# files = librosa.util.find_files('/content/drive/My Drive/audio_VAE/', ['mp3', 'm4a', 'opus'])
-
-# signal,sr = librosa.load(files[0],sr=44100,offset=0.0,duration=6.0,mono=False)
-# librosa.display.waveplot(signal,sr = sr)
-# plt.xlabel('Time')
-# plt.ylabel('Amplitude')
-# plt.show()
-
-# signal = np.array(signal)
-# print(signal.shape)
-##################################################################
-
-
-
-# print(files[:10])
-
-# loader = load_audio
-
-# print("Loader", loader.__name__)
-# # x = t.randn(2, 2).cuda()
-# # x = load(files[0], loader)
-
-
-# for i,file in enumerate(tqdm(files)):
-#   # x = t.randn(2, 2).cuda()
-#   x = load(file, loader)
-#   if i == 100:
-#       break
-
-# print('some shapes')
-# print(x.shape)
-# print(x.shape[:-1])
-# print(x.shape[-1])
-
-# collate_fn = lambda batch: t.stack([t.from_numpy(b) for b in batch], dim=0)
-
-# dataset = AudioDataset()
-
-# def save_object(obj, filename):
-#    with open(filename, 'wb') as output:  # Overwrites any existing file.
-#        pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
-
-# # # sample usage
-# save_object(dataset, '/content/drive/My Drive/VQVAE-trans/dataset/loader2.pkl')
-
-# print("Length of dataset is ", len(dataset))
-
-# train_loader = DataLoader(dataset, batch_size=1, num_workers=2, pin_memory=False,shuffle = True,drop_last=True, collate_fn=collate_fn)
-
-# dataset
-
 def load_object(filename):
     with open(filename, 'rb') as input:  # Overwrites any existing file.
         dataset_reload = pickle.load(input)
@@ -287,12 +211,6 @@ def save_object(obj, filename):
 
 collate_fn = lambda batch: t.stack([t.from_numpy(b) for b in batch], dim=0)
 
-def load_object(filename):
-    with open(filename, 'rb') as input:  # Overwrites any existing file.
-        dataset_reload = pickle.load(input)
-    
-    return dataset_reload
-
 dataset = AudioDataset()
 
 save_object(dataset, './drive/My Drive/VQVAE-trans/dataset/loader_immortal.pkl')
@@ -303,7 +221,69 @@ print("Length of dataset is ", len(dataset_reload))
 
 train_loader = DataLoader(dataset_reload, batch_size=1, num_workers=2, pin_memory=False,shuffle = True,drop_last=True, collate_fn=collate_fn)
 
-dataset_reload[0].shape
+""" Valid Loader """
+
+class Audio_Valid_Dataset(Dataset):
+  def  __init__(self):
+    #data loading
+    self.sr = 11000
+    self.channels = 2
+    self.min_duration = 17.0
+    self.max_duration = 30.0
+    self.sample_length = 12.0
+    self.aug_shift = False
+    self.init_dataset()
+
+
+  def get_index_offset(self, item):
+    # For a given dataset item and shift, return song index and offset within song
+    half_interval = self.sample_length//2
+    shift = np.random.randint(-half_interval, half_interval) if self.aug_shift else 0
+    offset = item * self.sample_length + shift # Note we centred shifts, so adding now
+    midpoint = offset + half_interval
+    assert 0 <= midpoint < self.cumsum[-1], f'Midpoint {midpoint} of item beyond total length {self.cumsum[-1]}'
+    index = np.searchsorted(self.cumsum, midpoint)  # index <-> midpoint of interval lies in this song
+    start, end = self.cumsum[index - 1] if index > 0 else 0.0, self.cumsum[index] # start and end of current song
+    assert start <= midpoint <= end, f"Midpoint {midpoint} not inside interval [{start}, {end}] for index {index}"
+    if offset > end - self.sample_length: # Going over song
+        offset = max(start, offset - half_interval)  # Now should fit
+    elif offset < start: # Going under song
+        offset = min(end - self.sample_length, offset + half_interval)  # Now should fit
+    #assert start <= offset <= end - self.sample_length, f"Offset {offset} not in [{start}, {end - self.sample_length}]. End: {end}, SL: {self.sample_length}, Index: {index}"
+    if not(start <= offset and offset <= end - self.sample_length):
+      offset = end - self.sample_length
+    offset = offset - start
+    return index, offset
+
+  def init_dataset(self):
+    files = librosa.util.find_files('/content/drive/My Drive/VQVAE-trans/dataset/2008/', ['mp3', 'm4a', 'opus','wav'])
+    print(f'Found {len(files)} files!')
+    files = files[31:33]
+    self.files = files 
+    self.durations = [int(get_duration_sec(file)) for file in files]
+    self.cumsum = np.cumsum(self.durations)
+
+  def __getitem__(self,item):
+    index, offset = self.get_index_offset(item)
+    filename, total_length = self.files[index], self.durations[index]
+    data, sr = load_audio(filename, sr=self.sr, offset=offset, duration=self.sample_length,time_base='sec')
+    assert data.shape == (self.channels, self.sample_length*self.sr), f'Expected {(self.channels, self.sample_length)}, got {data.shape}'
+    return data.T
+
+  def __len__(self):
+    return int(np.floor(self.cumsum[-1] / self.sample_length))
+
+collate_fn = lambda batch: t.stack([t.from_numpy(b) for b in batch], dim=0)
+
+dataset_val = Audio_Valid_Dataset()
+
+def save_object(obj, filename):
+   with open(filename, 'wb') as output:  # Overwrites any existing file.
+       pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
+
+print("Length of dataset is ", len(dataset_val))
+
+val_loader = DataLoader(dataset_val, batch_size=1, num_workers=2, pin_memory=False,shuffle = True,drop_last=True, collate_fn=collate_fn)
 
 """## **VQ-VAE**"""
 
@@ -1416,9 +1396,9 @@ def setup_hparams(hparam_set_names, kwargs):
 
 # Model hps
 vq = Hyperparams(
-    sr = 44100,
+    sr = 11000,
     levels = 1,
-    downs_t = (4, 4),
+    downs_t = (5, 5),
     strides_t = (2, 2),
     emb_width = 64,
     l_bins = 1024,
@@ -1440,8 +1420,8 @@ vq = Hyperparams(
     use_bottleneck=True,
     dilation_cycle=None,
     vqvae_reverse_decoder_dilation=True,
-    sample_length = 24.0*44100,
-    restore_vqvae='./drive/My Drive/VQVAE-trans/vqvae-checkpoint-2/checkpoint_step_1.pth.tar',
+    sample_length = 12.0*11000,
+    restore_vqvae='/content/drive/MyDrive/VQVAE-trans/vqvae-checkpoint-4/checkpoint_step_8001.pth.tar',
     lr=0.0003,
     clip=1.0,
     beta1=0.9,
@@ -1722,7 +1702,7 @@ import torch.optim as optim
 #    print("Unable to write to file")
 
 try: 
-    filename = './drive/My Drive/EMOTION/VQVAE-trans/Pytorch_dataset/bandwidth2.pkl'
+    filename = './drive/My Drive/EMOTION/VQVAE-trans/Pytorch_dataset/bandwidth3.pkl'
     filehandler = open(filename, 'rb')
     bandwidth_dict = pickle.load(filehandler) 
     print(bandwidth_dict)
@@ -1938,20 +1918,22 @@ def add_argument():
     return args
 
 NUM_BATCHES = int(1e5)
-NUM_ITERATIONS = 12616
+NUM_ITERATIONS = len(dataset_reload)
+NUM_VAL_ITERATIONS = len(dataset_val)
 BATCH_SIZE = 1
 GRADIENT_ACCUMULATE_EVERY = 4
 LEARNING_RATE = 1e-4
 SAVE_EVERY  = 100
-GENERATE_EVERY  = 500
+VALIDATE = True
+GENERATE_EVERY  = 512
 GENERATE_LENGTH = 512
-SEQ_LENGTH = 2650
+SEQ_LENGTH = 4096
 save_model = True
-load_model = True
+load_model = False
 
 def save_checkpoint(state,epoch):
     print("=> Saving checkpoint")
-    prefix = './drive/MyDrive/audio_VAE/Reformer_checkpoint'
+    prefix = './drive/MyDrive/audio_VAE/Reformer_checkpoint_deep'
     filename = f'{prefix}/checkpoint_{epoch}.pth.tar'
     t.save(state, filename)
 
@@ -1965,7 +1947,7 @@ def load_checkpoint_transformer(checkpoint, model, optimizer):
 model = ReformerLM(
     dim = 1024,
     depth = 6,
-    max_seq_len = 2650,
+    max_seq_len = SEQ_LENGTH,
     num_tokens = vq.l_bins,
     heads = 8,
     bucket_size = 64,
@@ -2016,44 +1998,27 @@ for epoch in range(NUM_BATCHES):
         #seqs_target = [z_batch for z_batch in z[:, 62:]]
         source = t.cat([s[None, :] for s in seqs_source ], dim=0).to(t.long)
         #target = t.cat([s[None, :] for s in seqs_target ], dim=0).to(t.long)
-
-        #host_arr = source.cpu()
-        #label = target.cpu()
-        x_data = source
-        #y_data = label.numpy()
-
-        start = 0
-
-        for ii in range(5):
-          x = x_data[:,start:start+SEQ_LENGTH] 
-          data = x
-          # y = x_data[:,start+1:start+1+SEQ_LENGTH]
-
-          data = data.to(model_engine.local_rank)
-          loss = model_engine(data, return_loss = True)
-          loss_total += loss.item()
         
-          model_engine.backward(loss)
-          model_engine.step()
+        x_data = source
+        rand_start = t.randint(0, source.shape[1] - SEQ_LENGTH - 1, (1,))
+        
+        x = x_data[:,rand_start:rand_start+SEQ_LENGTH]
+
+        data = x
+
+        data = data.to(model_engine.local_rank)
+        loss = model_engine(data, return_loss = True)
+        loss_total += loss.item()
+
+        model_engine.backward(loss)
+        model_engine.step()
           
-          # print(loss.item() * GRADIENT_ACCUMULATE_EVERY)
-          # loss = model(x, return_loss = True)
-          # loss.backward()
-          
-
-          start += 10
-          
-          # t.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
-          # optim.step()
-          # optim.zero_grad()
-
-          count += 1
-
-
+        count += 1
+        
         if(i % 50 == 0): 
           print(f'training loss: {loss_total/(count)} :: epoch : {epoch}')
 
-        if(i % 1000 == 0):
+        if(i % 500 == 0):
           if save_model:
             checkpoint = {
               "state_dict": model.state_dict(),
@@ -2069,18 +2034,32 @@ for epoch in range(NUM_BATCHES):
             }
           save_checkpoint(checkpoint,i)
     
-    # if i % VALIDATE_EVERY == 0:
-    #     model.eval()
-    #     with torch.no_grad():
-    #         loss = model(next(val_loader), return_loss = True)
-    #         print(f'validation loss: {loss.item()}')
+    if VALIDATE:
+        model.eval()
+        
+        # print(f'Validation')
+        for j in tqdm(range(NUM_VAL_ITERATIONS)):
+            with t.no_grad():
+                song = next(iter(val_loader))
+                song = song.to('cuda', non_blocking=True)
+                x_in = song = audio_preprocess(song, vq)
+                rescale = lambda z_shape: (z_shape[0]*4125//vqvae.z_shapes[0][0],)
+                z_shapes = [rescale(z_shape) for z_shape in vqvae.z_shapes]
+                z = vqvae.encode(song, start_level=0, end_level=len(z_shapes), bs_chunks=1)
 
-    # if i % GENERATE_EVERY == 0:
-    #     model.eval()
-    #     inp = random.choice(val_dataset)[:-1]
-    #     prime = decode_tokens(inp)
-    #     print(f'%s \n\n %s', (prime, '*' * 100))
+                z = z[0]
+                
+                seqs_source = [z_batch for z_batch in z[:, :]]
+                #seqs_target = [z_batch for z_batch in z[:, 62:]]
+                source = t.cat([s[None, :] for s in seqs_source ], dim=0).to(t.long)
+                #target = t.cat([s[None, :] for s in seqs_target ], dim=0).to(t.long)
+                rand_start = t.randint(0, source.shape[1] - SEQ_LENGTH - 1, (1,))
 
-    #     sample = model.generate(inp, GENERATE_LENGTH)
-    #     output_str = decode_tokens(sample)
-    #     print(output_str)
+                x = source[:,rand_start:rand_start+SEQ_LENGTH]
+
+                loss = model_engine(x, return_loss = True)
+                loss_total_val += loss.item()
+
+                count_val += 1
+
+        print(f'\n validation loss: {loss_total_val/(count_val)}  :: epoch : {epoch}')
